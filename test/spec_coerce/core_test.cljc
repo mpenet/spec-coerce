@@ -28,7 +28,7 @@
 (sc/def ::some-coercion sc/parse-long)
 
 (s/def ::first-layer int?)
-(sc/def ::first-layer #(-> (sc/parse-long %) inc))
+(sc/def ::first-layer (fn [x _] (inc (sc/parse-long x))))
 
 (s/def ::second-layer ::first-layer)
 (s/def ::second-layer-and (s/and ::first-layer #(> % 10)))
@@ -289,7 +289,23 @@
                                   ::body "16"
                                   ::arms ["4" "4"]
                                   ::legs ["7" "7"]
-                                  :name "john"}))))))
+                                  :name "john"}))))
+    (is (= {::head 1
+            ::body 16
+            ::arms [4 4]
+            ::legs [7 7]
+            :name :john}
+           (sc/coerce ::animal
+                      {::head "1"
+                       ::body "16"
+                       ::arms ["4" "4"]
+                       ::legs ["7" "7"]
+                       :name "john"}
+                      {::sc/overrides
+                       {::head (sc/sym->coercer `int?)
+                        ::leg  (sc/sym->coercer `int?)
+                        ::name (sc/sym->coercer `keyword?)}})))
+    "Coerce with option form"))
 
 (s/def ::foo int?)
 (s/def ::bar string?)

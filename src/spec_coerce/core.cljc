@@ -25,57 +25,50 @@
     (sc/coerce ::my/spec data))"
   {})
 
-(defn parse-string
-  ([x] (parse-string x nil))
-  ([x _] (str x)))
-
 (defn parse-long
-  ([x] (parse-long x nil))
-  ([x _]
-   (cond (string? x)
-         (try
-           #?(:clj (Long/parseLong x)
-              :cljs (if (= "NaN" x)
-                      js/NaN
-                      (let [v (js/parseInt x)]
-                        (if (js/isNaN v) x v))))
-           (catch #?(:clj Exception :cljs :default) _
-             x))
-         (number? x) (long x)
-         :else       x)))
+  [x]
+  (cond (string? x)
+        (try
+          #?(:clj (Long/parseLong x)
+             :cljs (if (= "NaN" x)
+                     js/NaN
+                     (let [v (js/parseInt x)]
+                       (if (js/isNaN v) x v))))
+          (catch #?(:clj Exception :cljs :default) _
+            x))
+        (number? x) (long x)
+        :else       x))
 
 (defn parse-double
-  ([x] (parse-double x nil))
-  ([x _]
-   (cond (string? x)
-         (try
-           #?(:clj  (case x
-                      "##-Inf"    ##-Inf
-                      "##Inf"     ##Inf
-                      "##NaN"     ##NaN
-                      "NaN"       ##NaN
-                      "Infinity"  ##Inf
-                      "-Infinity" ##-Inf
-                      (Double/parseDouble x))
-              :cljs (if (= "NaN" x)
-                      js/NaN
-                      (let [v (js/parseFloat x)]
-                        (if (js/isNaN v) x v))))
-           (catch #?(:clj Exception :cljs :default) _
-             x))
-         (number? x) (double x)
-         :else       x)))
+  [x]
+  (cond (string? x)
+        (try
+          #?(:clj  (case x
+                     "##-Inf"    ##-Inf
+                     "##Inf"     ##Inf
+                     "##NaN"     ##NaN
+                     "NaN"       ##NaN
+                     "Infinity"  ##Inf
+                     "-Infinity" ##-Inf
+                     (Double/parseDouble x))
+             :cljs (if (= "NaN" x)
+                     js/NaN
+                     (let [v (js/parseFloat x)]
+                       (if (js/isNaN v) x v))))
+          (catch #?(:clj Exception :cljs :default) _
+            x))
+        (number? x) (double x)
+        :else       x))
 
 (defn parse-uuid
-  ([x] (parse-uuid x nil))
-  ([x _]
-   (if (string? x)
-     (try
-       #?(:clj  (UUID/fromString x)
-          :cljs (uuid x))
-       (catch #?(:clj Exception :cljs :default) _
-         x))
-     x)))
+  [x]
+  (if (string? x)
+    (try
+      #?(:clj  (UUID/fromString x)
+         :cljs (uuid x))
+      (catch #?(:clj Exception :cljs :default) _
+        x))
+    x))
 
 #?(:clj (def ^:dynamic *inst-formats*
           ["yyyy/M/d H:m:s" "yyyy/M/d H:m" "yyyy/M/d"
@@ -107,57 +100,51 @@
                x))))))
 
 (defn parse-inst
-  ([x] (parse-inst x nil))
-  ([x _]
-   (if (string? x)
-     (try
-       #?(:clj  (flexible-parse-inst x)
-          :cljs (js/Date. x))
-       (catch #?(:clj Exception :cljs :default) _
-         x))
-     x)))
+  [x]
+  (if (string? x)
+    (try
+      #?(:clj  (flexible-parse-inst x)
+         :cljs (js/Date. x))
+      (catch #?(:clj Exception :cljs :default) _
+        x))
+    x))
 
 (defn parse-boolean
-  ([x] (parse-boolean x nil))
-  ([x _]
-   (case x
-     "true" true
-     "false" false
-     x)))
+  [x]
+  (case x
+    "true" true
+    "false" false
+    x))
 
 (defn parse-keyword
-  ([x] (parse-keyword x nil))
-  ([x _]
-   (cond (string? x)
-         (if (str/starts-with? x ":")
-           (keyword (subs x 1))
-           (keyword x))
-         (symbol? x) (keyword x)
-         :else       x)))
+  [x]
+  (cond (string? x)
+        (if (str/starts-with? x ":")
+          (keyword (subs x 1))
+          (keyword x))
+        (symbol? x) (keyword x)
+        :else       x))
 
 (defn parse-symbol
-  ([x] (parse-symbol x nil))
-  ([x _]
-   (cond-> x
-     (string? x)
-     symbol)))
+  [x]
+  (cond-> x
+    (string? x)
+    symbol))
 
 (defn parse-ident
-  ([x] (parse-ident x nil))
-  ([x opts]
-   (if (string? x)
-     (if (str/starts-with? x ":")
-       (parse-keyword x opts)
-       (symbol x))
-     x)))
+  [x]
+  (if (string? x)
+    (if (str/starts-with? x ":")
+      (parse-keyword x)
+      (symbol x))
+    x))
 
 (defn parse-nil
-  ([x] (parse-nil x nil))
-  ([x _]
-   (if (and (string? x)
-            (#{"nil" "null"} (str/trim x)))
-     nil
-     x)))
+  [x]
+  (if (and (string? x)
+           (#{"nil" "null"} (str/trim x)))
+    nil
+    x))
 
 (defn parse-or [[_ & pairs]]
   (fn [x opts]
@@ -209,21 +196,19 @@
 
 #?(:clj
    (defn parse-decimal
-     ([x] (parse-decimal x nil))
-     ([x _]
-      (try
-        (if (and (string? x) (str/ends-with? x "M"))
-          (bigdec (subs x 0 (dec (count x))))
-          (bigdec x))
-        (catch Exception _ x)))))
+     [x]
+     (try
+       (if (and (string? x) (str/ends-with? x "M"))
+         (bigdec (subs x 0 (dec (count x))))
+         (bigdec x))
+       (catch Exception _ x))))
 
 #?(:clj
    (defn parse-uri
-     ([x] (parse-uri x nil))
-     ([x _]
-      (if (string? x)
-        (URI. x)
-        x))))
+     [x]
+     (if (string? x)
+       (URI. x)
+       x)))
 
 (defn type->sym [x]
   (cond (int? x)     `integer?
@@ -262,41 +247,46 @@
   [x _]
   x)
 
-(defmethod sym->coercer `string? [_] parse-string)
-(defmethod sym->coercer `number? [_] parse-double)
-(defmethod sym->coercer `integer? [_] parse-long)
-(defmethod sym->coercer `int? [_] parse-long)
-(defmethod sym->coercer `pos-int? [_] parse-long)
-(defmethod sym->coercer `neg-int? [_] parse-long)
-(defmethod sym->coercer `nat-int? [_] parse-long)
-(defmethod sym->coercer `even? [_] parse-long)
-(defmethod sym->coercer `odd? [_] parse-long)
-(defmethod sym->coercer `float? [_] parse-double)
-(defmethod sym->coercer `double? [_] parse-double)
-(defmethod sym->coercer `boolean? [_] parse-boolean)
-(defmethod sym->coercer `ident? [_] parse-ident)
-(defmethod sym->coercer `simple-ident? [_] parse-ident)
-(defmethod sym->coercer `qualified-ident? [_] parse-ident)
-(defmethod sym->coercer `keyword? [_] parse-keyword)
-(defmethod sym->coercer `simple-keyword? [_] parse-keyword)
-(defmethod sym->coercer `qualified-keyword? [_] parse-keyword)
-(defmethod sym->coercer `symbol? [_] parse-symbol)
-(defmethod sym->coercer `simple-symbol? [_] parse-symbol)
-(defmethod sym->coercer `qualified-symbol? [_] parse-symbol)
-(defmethod sym->coercer `uuid? [_] parse-uuid)
-(defmethod sym->coercer `inst? [_] parse-inst)
-(defmethod sym->coercer `nil? [_] parse-nil)
-(defmethod sym->coercer `false? [_] parse-boolean)
-(defmethod sym->coercer `true? [_] parse-boolean)
-(defmethod sym->coercer `zero? [_] parse-long)
+(defn- parse-no-opts
+  "Makes 1 arg parse-xx function arity-2 with ignored `option` arg"
+  [f]
+  (fn [x _] (f x)))
+
+(defmethod sym->coercer `string? [_] (parse-no-opts str))
+(defmethod sym->coercer `number? [_] (parse-no-opts parse-double))
+(defmethod sym->coercer `integer? [_] (parse-no-opts parse-long))
+(defmethod sym->coercer `int? [_] (parse-no-opts parse-long))
+(defmethod sym->coercer `pos-int? [_] (parse-no-opts parse-long))
+(defmethod sym->coercer `neg-int? [_] (parse-no-opts parse-long))
+(defmethod sym->coercer `nat-int? [_] (parse-no-opts parse-long))
+(defmethod sym->coercer `even? [_] (parse-no-opts parse-long))
+(defmethod sym->coercer `odd? [_] (parse-no-opts parse-long))
+(defmethod sym->coercer `float? [_] (parse-no-opts parse-double))
+(defmethod sym->coercer `double? [_] (parse-no-opts parse-double))
+(defmethod sym->coercer `boolean? [_] (parse-no-opts parse-boolean))
+(defmethod sym->coercer `ident? [_] (parse-no-opts parse-ident))
+(defmethod sym->coercer `simple-ident? [_] (parse-no-opts parse-ident))
+(defmethod sym->coercer `qualified-ident? [_] (parse-no-opts parse-ident))
+(defmethod sym->coercer `keyword? [_] (parse-no-opts parse-keyword))
+(defmethod sym->coercer `simple-keyword? [_] (parse-no-opts parse-keyword))
+(defmethod sym->coercer `qualified-keyword? [_] (parse-no-opts parse-keyword))
+(defmethod sym->coercer `symbol? [_] (parse-no-opts parse-symbol))
+(defmethod sym->coercer `simple-symbol? [_] (parse-no-opts parse-symbol))
+(defmethod sym->coercer `qualified-symbol? [_] (parse-no-opts parse-symbol))
+(defmethod sym->coercer `uuid? [_] (parse-no-opts parse-uuid))
+(defmethod sym->coercer `inst? [_] (parse-no-opts parse-inst))
+(defmethod sym->coercer `nil? [_] (parse-no-opts parse-nil))
+(defmethod sym->coercer `false? [_] (parse-no-opts parse-boolean))
+(defmethod sym->coercer `true? [_] (parse-no-opts parse-boolean))
+(defmethod sym->coercer `zero? [_] (parse-no-opts parse-long))
 (defmethod sym->coercer `s/or [form] (parse-or form))
 (defmethod sym->coercer `s/coll-of [form] (parse-coll-of form))
 (defmethod sym->coercer `s/map-of [form] (parse-map-of form))
 (defmethod sym->coercer `s/tuple [form] (parse-tuple form))
 (defmethod sym->coercer `s/multi-spec [form] (parse-multi-spec form))
 
-#?(:clj (defmethod sym->coercer `uri? [_] parse-uri))
-#?(:clj (defmethod sym->coercer `decimal? [_] parse-decimal))
+#?(:clj (defmethod sym->coercer `uri? [_] (parse-2 parse-uri)))
+#?(:clj (defmethod sym->coercer `decimal? [_] (parse-2 parse-decimal)))
 
 (defmethod sym->coercer :default [_] passthrough-parser)
 
@@ -354,7 +344,7 @@
   [coercer]
   (fn [x opts]
     (-> x
-        (parse-nil opts)
+        (parse-nil)
         (coercer opts))))
 
 (defn spec->coercion [root-spec]

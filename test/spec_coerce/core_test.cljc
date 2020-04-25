@@ -25,7 +25,7 @@
 
 #?(:clj (s/def ::infer-decimal? decimal?))
 
-(sc/def ::some-coercion sc/parse-long)
+(sc/def ::some-coercion (fn [x _] (sc/parse-long x)))
 
 (s/def ::first-layer int?)
 (sc/def ::first-layer (fn [x _] (inc (sc/parse-long x))))
